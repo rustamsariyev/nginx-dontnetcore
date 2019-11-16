@@ -1,5 +1,6 @@
 ﻿using Library.Core;
 using Library.Core.ControllerHelperClasses;
+using Library.Core.Postgresql;
 using Library.Models.Inputs;
 using Library.Models.Outputs;
 using Library.PostgresRepository.Abstract;
@@ -14,7 +15,7 @@ namespace Library.PostgresRepository
 { 
     public class PgBook : MainPgRepository, IPgBook
     {      
-        public PgBook(DbSettings _dbSettings) : base(_dbSettings) { }
+        public PgBook(DbSettings _dbSettings, LibraryFunctions _libraryFunctions/*, LibraryErrorMessages _libraryErrorMessages*/) : base(_dbSettings, _libraryFunctions/*, _libraryErrorMessages*/) { }
 
         public ItemResult Get(int id)
         {
@@ -39,9 +40,8 @@ namespace Library.PostgresRepository
                 }
                 catch (PostgresException e)
                 {
-                    itemResult.Code = e.ToString();
+                    itemResult.Code = LibraryErrorMessages.GetErrorMessage(e.MessageText);
                 }
-
             }
 
             return itemResult;

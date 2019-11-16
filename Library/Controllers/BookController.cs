@@ -200,9 +200,9 @@ namespace Library.Controllers
         public ItemResult Put(int id, IBook updatedBook)
         {
             ItemResult pr = new ItemResult();
-            PgBook pgBook = new PgBook(dbSettings);
             updatedBook.Id = id;
 
+            logger.LogInformation("Book updated occured: book_id: " + updatedBook.Id);
             return pgBook.Edit(updatedBook);
         }
 
@@ -227,64 +227,9 @@ namespace Library.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ItemResult Delete(int id)
-        {            
+        {
+            logger.LogInformation("Book deleted occured: book_id: " + id);
             return pgBook.Delete(id);
         }
-
-
-
-
-
-        public class CustomValidation
-        {
-            public sealed class checkCountry : ValidationAttribute
-            {
-                public String AllowLetters { get; set; }
-                public new String ErrorMessage { get; set; }
-                protected override ValidationResult IsValid(object bookName, ValidationContext validationContext)
-                {
-                    //string[] myarr = AllowCountry.ToString().Split(',');
-                    if (((String)bookName).Contains(AllowLetters))
-                    {
-                        return ValidationResult.Success;
-                    }
-                    else
-                    {
-                        return new ValidationResult(ErrorMessage);
-                    }
-                }
-            }
-
-            public class isEqual : ValidationAttribute
-            {
-                private readonly string _comparisonProperty;
-
-                public isEqual(string comparisonProperty)
-                {
-                    _comparisonProperty = comparisonProperty;
-                }
-
-                protected override ValidationResult IsValid(object value, ValidationContext validationContext)
-                {
-                    ErrorMessage = ErrorMessageString;
-                    int rating = (int)value;
-
-                    var property = validationContext.ObjectType.GetProperty(_comparisonProperty);
-
-                    if (property == null)
-                        throw new ArgumentException("Property with this name not found");
-
-                    int comparisonValue = (int)property.GetValue(validationContext.ObjectInstance);
-
-                    if (rating > comparisonValue)
-                        return new ValidationResult(ErrorMessage);
-
-                    return ValidationResult.Success;
-                }
-            }
-        }
-
-
-
     }
 }

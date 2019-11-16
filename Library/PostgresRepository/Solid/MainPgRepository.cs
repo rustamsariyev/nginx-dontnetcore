@@ -10,14 +10,16 @@ namespace Library.PostgresRepository
 {
     public class MainPgRepository
     {
-        private readonly DbSettings DbSettings;
-        public NpgsqlCommand Cmd { get; set; }
-        public LibraryFunctions LibraryFunctions { get; }
+        public readonly DbSettings DbSettings;
+        public NpgsqlCommand Cmd;
+        public readonly LibraryFunctions LibraryFunctions;
+        //public readonly LibraryErrorMessages LibraryErrorMessages;
 
-        public MainPgRepository(DbSettings _dbSettings)
+        public MainPgRepository(DbSettings _dbSettings, LibraryFunctions _libraryFunctions/*, LibraryErrorMessages _libraryErrorMessages*/)
         {
-            this.DbSettings = _dbSettings;
-            LibraryFunctions = new LibraryFunctions();
+            DbSettings = _dbSettings;
+            LibraryFunctions = _libraryFunctions;
+            //LibraryErrorMessages = _libraryErrorMessages;
         }
 
         public void CreateFunctionCallQuery(string functionName, NpgsqlConnection connection)

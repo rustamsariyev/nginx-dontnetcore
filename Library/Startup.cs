@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Library.Core;
+using Library.Core.Postgresql;
 using Library.PostgresRepository;
 using Library.PostgresRepository.Abstract;
 using Microsoft.AspNetCore.Builder;
@@ -35,10 +36,12 @@ namespace Library
             var allSettings = new AllSettings();
             var jwtSettings = new JwtSettings();
             var dbSettings = new DbSettings();
+            var libraryFunctions = new LibraryFunctions();
+            //var libraryErrorMessages = new LibraryErrorMessages();
 
             Configuration.Bind("DbSettings", dbSettings);
             services.AddSingleton(dbSettings);
-            services.AddTransient<IPgBook, PgBook>(s => new PgBook(dbSettings));
+            services.AddTransient<IPgBook, PgBook>(s => new PgBook(dbSettings, libraryFunctions));
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>

@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static Library.Controllers.BookController;
-using static Library.Controllers.BookController.CustomValidation;
-//[checkCountry(AllowLetters= "hh", ErrorMessage = ("Please choose a valid country eg.(India,Pakistan,Nepal"))]
-//[isEqual("CategoryId")]
+using static Library.Core.ValidationAttributes.IBookValidationAttributes;
 
 namespace Library.Models.Inputs
 {
