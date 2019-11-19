@@ -36,5 +36,11 @@ namespace Library.Models.Inputs
         public bool? IsDeleted { get; set; }
         [JsonProperty(PropertyName = "rating")]        
         public int? Rating { get; set; }
+        [JsonProperty(PropertyName = "publish_date")]
+        public DateTime? PublishDate { get; set; }
+        [JsonProperty(PropertyName = "access_type")]
+        public String? AccessType { get; set; }
+        [JsonProperty(PropertyName = "book_format")]
+        public String? BookFormat { get; set; }
     }
 }

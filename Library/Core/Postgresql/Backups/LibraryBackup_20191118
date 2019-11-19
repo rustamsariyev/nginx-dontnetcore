@@ -1,0 +1,1411 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 11.5
+-- Dumped by pg_dump version 12.0
+
+-- Started on 2019-11-18 14:16:20
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 6 (class 2615 OID 25633)
+-- Name: library; Type: SCHEMA; Schema: -; Owner: library
+--
+
+CREATE SCHEMA library;
+
+
+ALTER SCHEMA library OWNER TO library;
+
+--
+-- TOC entry 244 (class 1255 OID 25890)
+-- Name: fn_book_add(character varying, integer, integer, integer, integer, integer, integer); Type: FUNCTION; Schema: library; Owner: library
+--
+
+CREATE FUNCTION library.fn_book_add(p_book_name character varying, p_author_id integer, p_language_id integer, p_publishing_house_id integer, p_category_id integer, p_book_location_id integer, p_rating integer) RETURNS json
+    LANGUAGE plpgsql
+    AS $$
+declare 
+	v_result json;
+v_tmp int;
+begin
+	insert into lib_books(book_name, author_id, language_id, publishing_house_id, category_id, book_location_id, rating) 
+	values(p_book_name, p_author_id, p_language_id, p_publishing_house_id, p_category_id, p_book_location_id, p_rating);
+
+	select row_to_json(lib_books) into v_result from lib_books where book_name=p_book_name and author_id=p_author_id
+																	and language_id=p_language_id and publishing_house_id = p_publishing_house_id
+																	and category_id=p_category_id and book_location_id=p_book_location_id
+																	and rating=p_rating;																		
+	return v_result;   
+end;
+$$;
+
+
+ALTER FUNCTION library.fn_book_add(p_book_name character varying, p_author_id integer, p_language_id integer, p_publishing_house_id integer, p_category_id integer, p_book_location_id integer, p_rating integer) OWNER TO library;
+
+--
+-- TOC entry 228 (class 1255 OID 25894)
+-- Name: fn_book_delete(integer); Type: FUNCTION; Schema: library; Owner: library
+--
+
+CREATE FUNCTION library.fn_book_delete(p_book_id integer) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+declare 
+	v_result json;
+begin
+	update lib_books set is_deleted=true where book_id=p_book_id;
+	return 1;
+end;
+$$;
+
+
+ALTER FUNCTION library.fn_book_delete(p_book_id integer) OWNER TO library;
+
+--
+-- TOC entry 243 (class 1255 OID 25891)
+-- Name: fn_book_edit(integer, character varying, integer, integer, integer, integer, integer, integer); Type: FUNCTION; Schema: library; Owner: library
+--
+
+CREATE FUNCTION library.fn_book_edit(p_book_id integer, p_book_name character varying, p_author_id integer, p_language_id integer, p_publishing_house_id integer, p_category_id integer, p_book_location_id integer, p_rating integer) RETURNS json
+    LANGUAGE plpgsql
+    AS $$
+declare 
+	v_result json;
+begin
+	update lib_books set book_name=p_book_name, author_id=p_author_id, language_id=p_language_id,
+						 publishing_house_id=p_publishing_house_id, category_id=p_category_id,
+						 book_location_id=p_book_location_id, rating=p_rating where book_id=p_book_id;
+
+	select row_to_json(lib_books) into v_result from lib_books where book_id=p_book_id;
+	return v_result;   
+end;
+$$;
+
+
+ALTER FUNCTION library.fn_book_edit(p_book_id integer, p_book_name character varying, p_author_id integer, p_language_id integer, p_publishing_house_id integer, p_category_id integer, p_book_location_id integer, p_rating integer) OWNER TO library;
+
+--
+-- TOC entry 229 (class 1255 OID 25868)
+-- Name: fn_book_get(integer); Type: FUNCTION; Schema: library; Owner: library
+--
+
+CREATE FUNCTION library.fn_book_get(p_book_id integer) RETURNS json
+    LANGUAGE plpgsql
+    AS $$
+declare 
+	v_result json;
+begin
+	select row_to_json(lib_books) into v_result from lib_books where book_id=p_book_id;
+	
+	if v_result is null then
+		raise exception 'lib_0001';
+	end if;
+	return v_result;  
+end;
+$$;
+
+
+ALTER FUNCTION library.fn_book_get(p_book_id integer) OWNER TO library;
+
+--
+-- TOC entry 230 (class 1255 OID 25882)
+-- Name: fn_book_get_all(); Type: FUNCTION; Schema: library; Owner: library
+--
+
+CREATE FUNCTION library.fn_book_get_all() RETURNS json
+    LANGUAGE plpgsql
+    AS $$
+declare 
+	v_result json;
+begin
+	select array_to_json(array_agg(row_to_json(lib_badsadooks))) into v_result from lib_books;
+
+	if v_result is null then
+		raise exception 'lib_0002';
+	end if;
+	return v_result;  	
+end;
+$$;
+
+
+ALTER FUNCTION library.fn_book_get_all() OWNER TO library;
+
+SET default_tablespace = '';
+
+--
+-- TOC entry 198 (class 1259 OID 25637)
+-- Name: lib_authors; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_authors (
+    author_id integer NOT NULL,
+    author_name character varying NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on date,
+    deleted_on date,
+    is_deleted boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE library.lib_authors OWNER TO library;
+
+--
+-- TOC entry 197 (class 1259 OID 25635)
+-- Name: lib_authors_author_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_authors ALTER COLUMN author_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME library.lib_authors_author_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 214 (class 1259 OID 25784)
+-- Name: lib_user_baskets; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_user_baskets (
+    user_basket_id integer NOT NULL,
+    user_id integer NOT NULL,
+    book_id integer NOT NULL,
+    pick_up_date date NOT NULL,
+    deadline_date date NOT NULL,
+    is_submitted boolean DEFAULT false NOT NULL,
+    is_accepted boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE library.lib_user_baskets OWNER TO library;
+
+--
+-- TOC entry 213 (class 1259 OID 25782)
+-- Name: lib_baskets_basket_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_user_baskets ALTER COLUMN user_basket_id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME library.lib_baskets_basket_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 206 (class 1259 OID 25675)
+-- Name: lib_book_locations; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_book_locations (
+    book_location_id integer NOT NULL,
+    section character varying NOT NULL,
+    shelf character varying NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on date,
+    deleted_on date,
+    is_deleted boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE library.lib_book_locations OWNER TO library;
+
+--
+-- TOC entry 219 (class 1259 OID 25953)
+-- Name: lib_book_statuses; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_book_statuses (
+    book_status_id integer NOT NULL,
+    isbn character varying(17) NOT NULL,
+    physical_status character varying(355) NOT NULL,
+    is_available boolean DEFAULT true NOT NULL,
+    book_id integer NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on timestamp without time zone,
+    deleted_on timestamp without time zone,
+    is_deleted boolean
+);
+
+
+ALTER TABLE library.lib_book_statuses OWNER TO library;
+
+--
+-- TOC entry 218 (class 1259 OID 25951)
+-- Name: lib_book_statuses_lib_book_status_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+CREATE SEQUENCE library.lib_book_statuses_lib_book_status_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE library.lib_book_statuses_lib_book_status_id_seq OWNER TO library;
+
+--
+-- TOC entry 3884 (class 0 OID 0)
+-- Dependencies: 218
+-- Name: lib_book_statuses_lib_book_status_id_seq; Type: SEQUENCE OWNED BY; Schema: library; Owner: library
+--
+
+ALTER SEQUENCE library.lib_book_statuses_lib_book_status_id_seq OWNED BY library.lib_book_statuses.book_status_id;
+
+
+--
+-- TOC entry 205 (class 1259 OID 25673)
+-- Name: lib_booklocations_booklocation_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_book_locations ALTER COLUMN book_location_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME library.lib_booklocations_booklocation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 208 (class 1259 OID 25692)
+-- Name: lib_books; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_books (
+    book_id integer NOT NULL,
+    book_name character varying NOT NULL,
+    author_id integer NOT NULL,
+    language_id integer NOT NULL,
+    publishing_house_id integer NOT NULL,
+    category_id integer NOT NULL,
+    book_location_id integer NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on date,
+    deleted_on date,
+    is_deleted boolean DEFAULT false NOT NULL,
+    rating integer DEFAULT 0 NOT NULL,
+    publish_date date,
+    access_type character varying NOT NULL,
+    book_format character varying NOT NULL
+);
+
+
+ALTER TABLE library.lib_books OWNER TO library;
+
+--
+-- TOC entry 207 (class 1259 OID 25690)
+-- Name: lib_books_book_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_books ALTER COLUMN book_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME library.lib_books_book_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 227 (class 1259 OID 26039)
+-- Name: lib_user_bookshelf_books; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_user_bookshelf_books (
+    bookshelf_book_id integer NOT NULL,
+    book_id integer NOT NULL,
+    user_id integer NOT NULL,
+    pick_up_date timestamp without time zone NOT NULL,
+    operator_id integer NOT NULL
+);
+
+
+ALTER TABLE library.lib_user_bookshelf_books OWNER TO library;
+
+--
+-- TOC entry 226 (class 1259 OID 26037)
+-- Name: lib_bookshelf_books_bookshelf_book_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+CREATE SEQUENCE library.lib_bookshelf_books_bookshelf_book_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE library.lib_bookshelf_books_bookshelf_book_id_seq OWNER TO library;
+
+--
+-- TOC entry 3885 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: lib_bookshelf_books_bookshelf_book_id_seq; Type: SEQUENCE OWNED BY; Schema: library; Owner: library
+--
+
+ALTER SEQUENCE library.lib_bookshelf_books_bookshelf_book_id_seq OWNED BY library.lib_user_bookshelf_books.bookshelf_book_id;
+
+
+--
+-- TOC entry 204 (class 1259 OID 25665)
+-- Name: lib_categories; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_categories (
+    category_id integer NOT NULL,
+    category_name character varying NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on date,
+    deleted_on date,
+    is_deleted boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE library.lib_categories OWNER TO library;
+
+--
+-- TOC entry 203 (class 1259 OID 25663)
+-- Name: lib_categories_category_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_categories ALTER COLUMN category_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME library.lib_categories_category_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 200 (class 1259 OID 25645)
+-- Name: lib_languages; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_languages (
+    language_id integer NOT NULL,
+    language_name character varying NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on date,
+    deleted_on date,
+    is_deleted boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE library.lib_languages OWNER TO library;
+
+--
+-- TOC entry 199 (class 1259 OID 25643)
+-- Name: lib_languages_language_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_languages ALTER COLUMN language_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME library.lib_languages_language_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 202 (class 1259 OID 25655)
+-- Name: lib_publishing_houses; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_publishing_houses (
+    publishing_house_id integer NOT NULL,
+    publishing_house_name character varying NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on date,
+    deleted_on date,
+    is_deleted boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE library.lib_publishing_houses OWNER TO library;
+
+--
+-- TOC entry 201 (class 1259 OID 25653)
+-- Name: lib_publishinghouses_publishinghouse_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_publishing_houses ALTER COLUMN publishing_house_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME library.lib_publishinghouses_publishinghouse_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 216 (class 1259 OID 25809)
+-- Name: lib_user_rating_histories; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_user_rating_histories (
+    rating_history_id integer NOT NULL,
+    user_id integer NOT NULL,
+    book_id integer NOT NULL,
+    given_rating integer NOT NULL,
+    rating_date date NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on date,
+    deleted_on date,
+    is_deleted boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE library.lib_user_rating_histories OWNER TO library;
+
+--
+-- TOC entry 215 (class 1259 OID 25807)
+-- Name: lib_rating_histories_rating_history_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_user_rating_histories ALTER COLUMN rating_history_id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME library.lib_rating_histories_rating_history_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 225 (class 1259 OID 26005)
+-- Name: lib_user_reading_hall_books; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_user_reading_hall_books (
+    reading_hall_book integer NOT NULL,
+    book_id integer NOT NULL,
+    user_id integer NOT NULL,
+    pick_up_date timestamp without time zone NOT NULL,
+    operator_id integer NOT NULL
+);
+
+
+ALTER TABLE library.lib_user_reading_hall_books OWNER TO library;
+
+--
+-- TOC entry 224 (class 1259 OID 26003)
+-- Name: lib_reading_hall_books_reading_hall_book_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+CREATE SEQUENCE library.lib_reading_hall_books_reading_hall_book_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE library.lib_reading_hall_books_reading_hall_book_seq OWNER TO library;
+
+--
+-- TOC entry 3886 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: lib_reading_hall_books_reading_hall_book_seq; Type: SEQUENCE OWNED BY; Schema: library; Owner: library
+--
+
+ALTER SEQUENCE library.lib_reading_hall_books_reading_hall_book_seq OWNED BY library.lib_user_reading_hall_books.reading_hall_book;
+
+
+--
+-- TOC entry 221 (class 1259 OID 25971)
+-- Name: lib_sub_categories; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_sub_categories (
+    sub_category_id integer NOT NULL,
+    category_id integer NOT NULL,
+    sub_category_name character varying NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on integer,
+    deleted_on timestamp without time zone,
+    is_deleted boolean
+);
+
+
+ALTER TABLE library.lib_sub_categories OWNER TO library;
+
+--
+-- TOC entry 220 (class 1259 OID 25969)
+-- Name: lib_sub_categories_lib_sub_category_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+CREATE SEQUENCE library.lib_sub_categories_lib_sub_category_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE library.lib_sub_categories_lib_sub_category_id_seq OWNER TO library;
+
+--
+-- TOC entry 3887 (class 0 OID 0)
+-- Dependencies: 220
+-- Name: lib_sub_categories_lib_sub_category_id_seq; Type: SEQUENCE OWNED BY; Schema: library; Owner: library
+--
+
+ALTER SEQUENCE library.lib_sub_categories_lib_sub_category_id_seq OWNED BY library.lib_sub_categories.sub_category_id;
+
+
+--
+-- TOC entry 223 (class 1259 OID 25987)
+-- Name: lib_user_expected_books; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_user_expected_books (
+    user_expected_book_id integer NOT NULL,
+    book_id integer NOT NULL,
+    user_id integer NOT NULL,
+    is_available boolean NOT NULL
+);
+
+
+ALTER TABLE library.lib_user_expected_books OWNER TO library;
+
+--
+-- TOC entry 222 (class 1259 OID 25985)
+-- Name: lib_user_expected_books_user_expected_book_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+CREATE SEQUENCE library.lib_user_expected_books_user_expected_book_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE library.lib_user_expected_books_user_expected_book_id_seq OWNER TO library;
+
+--
+-- TOC entry 3888 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: lib_user_expected_books_user_expected_book_id_seq; Type: SEQUENCE OWNED BY; Schema: library; Owner: library
+--
+
+ALTER SEQUENCE library.lib_user_expected_books_user_expected_book_id_seq OWNED BY library.lib_user_expected_books.user_expected_book_id;
+
+
+--
+-- TOC entry 212 (class 1259 OID 25724)
+-- Name: lib_user_histories; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_user_histories (
+    user_history_id integer NOT NULL,
+    book_id integer NOT NULL,
+    return_date date NOT NULL,
+    user_id integer NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on date,
+    deleted_on date,
+    is_deleted boolean DEFAULT false NOT NULL,
+    pick_up_date date NOT NULL,
+    is_returned boolean NOT NULL
+);
+
+
+ALTER TABLE library.lib_user_histories OWNER TO library;
+
+--
+-- TOC entry 211 (class 1259 OID 25722)
+-- Name: lib_userhistories_userhistory_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_user_histories ALTER COLUMN user_history_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME library.lib_userhistories_userhistory_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 210 (class 1259 OID 25714)
+-- Name: lib_users; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.lib_users (
+    user_id integer NOT NULL,
+    user_name character varying NOT NULL,
+    updated_by integer,
+    deleted_by integer,
+    updated_on timestamp without time zone,
+    deleted_on date,
+    is_deleted boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE library.lib_users OWNER TO library;
+
+--
+-- TOC entry 209 (class 1259 OID 25712)
+-- Name: lib_users_user_id_seq; Type: SEQUENCE; Schema: library; Owner: library
+--
+
+ALTER TABLE library.lib_users ALTER COLUMN user_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME library.lib_users_user_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 217 (class 1259 OID 25883)
+-- Name: v_result; Type: TABLE; Schema: library; Owner: library
+--
+
+CREATE TABLE library.v_result (
+    array_to_json json
+);
+
+
+ALTER TABLE library.v_result OWNER TO library;
+
+--
+-- TOC entry 3666 (class 2604 OID 25956)
+-- Name: lib_book_statuses book_status_id; Type: DEFAULT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_book_statuses ALTER COLUMN book_status_id SET DEFAULT nextval('library.lib_book_statuses_lib_book_status_id_seq'::regclass);
+
+
+--
+-- TOC entry 3668 (class 2604 OID 25974)
+-- Name: lib_sub_categories sub_category_id; Type: DEFAULT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_sub_categories ALTER COLUMN sub_category_id SET DEFAULT nextval('library.lib_sub_categories_lib_sub_category_id_seq'::regclass);
+
+
+--
+-- TOC entry 3671 (class 2604 OID 26042)
+-- Name: lib_user_bookshelf_books bookshelf_book_id; Type: DEFAULT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_bookshelf_books ALTER COLUMN bookshelf_book_id SET DEFAULT nextval('library.lib_bookshelf_books_bookshelf_book_id_seq'::regclass);
+
+
+--
+-- TOC entry 3669 (class 2604 OID 25990)
+-- Name: lib_user_expected_books user_expected_book_id; Type: DEFAULT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_expected_books ALTER COLUMN user_expected_book_id SET DEFAULT nextval('library.lib_user_expected_books_user_expected_book_id_seq'::regclass);
+
+
+--
+-- TOC entry 3670 (class 2604 OID 26008)
+-- Name: lib_user_reading_hall_books reading_hall_book; Type: DEFAULT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_reading_hall_books ALTER COLUMN reading_hall_book SET DEFAULT nextval('library.lib_reading_hall_books_reading_hall_book_seq'::regclass);
+
+
+--
+-- TOC entry 3849 (class 0 OID 25637)
+-- Dependencies: 198
+-- Data for Name: lib_authors; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_authors (author_id, author_name, updated_by, deleted_by, updated_on, deleted_on, is_deleted) FROM stdin;
+1	athor1	\N	\N	\N	\N	f
+\.
+
+
+--
+-- TOC entry 3857 (class 0 OID 25675)
+-- Dependencies: 206
+-- Data for Name: lib_book_locations; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_book_locations (book_location_id, section, shelf, updated_by, deleted_by, updated_on, deleted_on, is_deleted) FROM stdin;
+1	A123	34	\N	\N	\N	\N	f
+\.
+
+
+--
+-- TOC entry 3870 (class 0 OID 25953)
+-- Dependencies: 219
+-- Data for Name: lib_book_statuses; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_book_statuses (book_status_id, isbn, physical_status, is_available, book_id, updated_by, deleted_by, updated_on, deleted_on, is_deleted) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3859 (class 0 OID 25692)
+-- Dependencies: 208
+-- Data for Name: lib_books; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_books (book_id, book_name, author_id, language_id, publishing_house_id, category_id, book_location_id, updated_by, deleted_by, updated_on, deleted_on, is_deleted, rating, publish_date, access_type, book_format) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3855 (class 0 OID 25665)
+-- Dependencies: 204
+-- Data for Name: lib_categories; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_categories (category_id, category_name, updated_by, deleted_by, updated_on, deleted_on, is_deleted) FROM stdin;
+3	category1	\N	\N	\N	\N	f
+\.
+
+
+--
+-- TOC entry 3851 (class 0 OID 25645)
+-- Dependencies: 200
+-- Data for Name: lib_languages; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_languages (language_id, language_name, updated_by, deleted_by, updated_on, deleted_on, is_deleted) FROM stdin;
+1	category1	\N	\N	\N	\N	f
+\.
+
+
+--
+-- TOC entry 3853 (class 0 OID 25655)
+-- Dependencies: 202
+-- Data for Name: lib_publishing_houses; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_publishing_houses (publishing_house_id, publishing_house_name, updated_by, deleted_by, updated_on, deleted_on, is_deleted) FROM stdin;
+1	publishing_hause_name	\N	\N	\N	\N	f
+\.
+
+
+--
+-- TOC entry 3872 (class 0 OID 25971)
+-- Dependencies: 221
+-- Data for Name: lib_sub_categories; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_sub_categories (sub_category_id, category_id, sub_category_name, updated_by, deleted_by, updated_on, deleted_on, is_deleted) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3865 (class 0 OID 25784)
+-- Dependencies: 214
+-- Data for Name: lib_user_baskets; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_user_baskets (user_basket_id, user_id, book_id, pick_up_date, deadline_date, is_submitted, is_accepted) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3878 (class 0 OID 26039)
+-- Dependencies: 227
+-- Data for Name: lib_user_bookshelf_books; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_user_bookshelf_books (bookshelf_book_id, book_id, user_id, pick_up_date, operator_id) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3874 (class 0 OID 25987)
+-- Dependencies: 223
+-- Data for Name: lib_user_expected_books; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_user_expected_books (user_expected_book_id, book_id, user_id, is_available) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3863 (class 0 OID 25724)
+-- Dependencies: 212
+-- Data for Name: lib_user_histories; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_user_histories (user_history_id, book_id, return_date, user_id, updated_by, deleted_by, updated_on, deleted_on, is_deleted, pick_up_date, is_returned) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3867 (class 0 OID 25809)
+-- Dependencies: 216
+-- Data for Name: lib_user_rating_histories; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_user_rating_histories (rating_history_id, user_id, book_id, given_rating, rating_date, updated_by, deleted_by, updated_on, deleted_on, is_deleted) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3876 (class 0 OID 26005)
+-- Dependencies: 225
+-- Data for Name: lib_user_reading_hall_books; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_user_reading_hall_books (reading_hall_book, book_id, user_id, pick_up_date, operator_id) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3861 (class 0 OID 25714)
+-- Dependencies: 210
+-- Data for Name: lib_users; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.lib_users (user_id, user_name, updated_by, deleted_by, updated_on, deleted_on, is_deleted) FROM stdin;
+4	user1	1	1	2019-11-04 00:00:00	2019-11-04	f
+5	user3	2	2	2019-11-04 00:00:00	2019-11-04	f
+7	jhbsad	4	5	2019-11-04 00:00:00	2019-11-04	f
+8	user_last	5	5	2019-11-05 00:00:00	2019-11-05	f
+9	user_last	5	5	2019-11-05 14:09:47.596769	2019-11-05	f
+\.
+
+
+--
+-- TOC entry 3868 (class 0 OID 25883)
+-- Dependencies: 217
+-- Data for Name: v_result; Type: TABLE DATA; Schema: library; Owner: library
+--
+
+COPY library.v_result (array_to_json) FROM stdin;
+[{"book_id":4,"book_name":"book1","author_id":1,"language_id":1,"publishing_house_id":1,"category_id":3,"book_location_id":1,"updated_by":null,"deleted_by":null,"updated_on":null,"deleted_on":null,"is_deleted":false,"rating":3}]
+\.
+
+
+--
+-- TOC entry 3889 (class 0 OID 0)
+-- Dependencies: 197
+-- Name: lib_authors_author_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_authors_author_id_seq', 1, true);
+
+
+--
+-- TOC entry 3890 (class 0 OID 0)
+-- Dependencies: 213
+-- Name: lib_baskets_basket_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_baskets_basket_id_seq', 1, false);
+
+
+--
+-- TOC entry 3891 (class 0 OID 0)
+-- Dependencies: 218
+-- Name: lib_book_statuses_lib_book_status_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_book_statuses_lib_book_status_id_seq', 1, false);
+
+
+--
+-- TOC entry 3892 (class 0 OID 0)
+-- Dependencies: 205
+-- Name: lib_booklocations_booklocation_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_booklocations_booklocation_id_seq', 1, true);
+
+
+--
+-- TOC entry 3893 (class 0 OID 0)
+-- Dependencies: 207
+-- Name: lib_books_book_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_books_book_id_seq', 12, true);
+
+
+--
+-- TOC entry 3894 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: lib_bookshelf_books_bookshelf_book_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_bookshelf_books_bookshelf_book_id_seq', 1, false);
+
+
+--
+-- TOC entry 3895 (class 0 OID 0)
+-- Dependencies: 203
+-- Name: lib_categories_category_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_categories_category_id_seq', 3, true);
+
+
+--
+-- TOC entry 3896 (class 0 OID 0)
+-- Dependencies: 199
+-- Name: lib_languages_language_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_languages_language_id_seq', 1, true);
+
+
+--
+-- TOC entry 3897 (class 0 OID 0)
+-- Dependencies: 201
+-- Name: lib_publishinghouses_publishinghouse_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_publishinghouses_publishinghouse_id_seq', 1, true);
+
+
+--
+-- TOC entry 3898 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: lib_rating_histories_rating_history_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_rating_histories_rating_history_id_seq', 1, false);
+
+
+--
+-- TOC entry 3899 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: lib_reading_hall_books_reading_hall_book_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_reading_hall_books_reading_hall_book_seq', 1, false);
+
+
+--
+-- TOC entry 3900 (class 0 OID 0)
+-- Dependencies: 220
+-- Name: lib_sub_categories_lib_sub_category_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_sub_categories_lib_sub_category_id_seq', 1, false);
+
+
+--
+-- TOC entry 3901 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: lib_user_expected_books_user_expected_book_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_user_expected_books_user_expected_book_id_seq', 1, false);
+
+
+--
+-- TOC entry 3902 (class 0 OID 0)
+-- Dependencies: 211
+-- Name: lib_userhistories_userhistory_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_userhistories_userhistory_id_seq', 1, false);
+
+
+--
+-- TOC entry 3903 (class 0 OID 0)
+-- Dependencies: 209
+-- Name: lib_users_user_id_seq; Type: SEQUENCE SET; Schema: library; Owner: library
+--
+
+SELECT pg_catalog.setval('library.lib_users_user_id_seq', 9, true);
+
+
+--
+-- TOC entry 3693 (class 2606 OID 25961)
+-- Name: lib_book_statuses lib_book_statuses_isbn_key; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_book_statuses
+    ADD CONSTRAINT lib_book_statuses_isbn_key UNIQUE (isbn);
+
+
+--
+-- TOC entry 3695 (class 2606 OID 25963)
+-- Name: lib_book_statuses lib_book_statuses_physical_status_key; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_book_statuses
+    ADD CONSTRAINT lib_book_statuses_physical_status_key UNIQUE (physical_status);
+
+
+--
+-- TOC entry 3685 (class 2606 OID 25721)
+-- Name: lib_users lib_users_pk; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_users
+    ADD CONSTRAINT lib_users_pk PRIMARY KEY (user_id);
+
+
+--
+-- TOC entry 3673 (class 2606 OID 25740)
+-- Name: lib_authors pk_lib_authors; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_authors
+    ADD CONSTRAINT pk_lib_authors PRIMARY KEY (author_id);
+
+
+--
+-- TOC entry 3689 (class 2606 OID 25788)
+-- Name: lib_user_baskets pk_lib_baskets; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_baskets
+    ADD CONSTRAINT pk_lib_baskets PRIMARY KEY (user_basket_id);
+
+
+--
+-- TOC entry 3681 (class 2606 OID 25682)
+-- Name: lib_book_locations pk_lib_book_locations; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_book_locations
+    ADD CONSTRAINT pk_lib_book_locations PRIMARY KEY (book_location_id);
+
+
+--
+-- TOC entry 3697 (class 2606 OID 25959)
+-- Name: lib_book_statuses pk_lib_book_statuses; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_book_statuses
+    ADD CONSTRAINT pk_lib_book_statuses PRIMARY KEY (book_status_id);
+
+
+--
+-- TOC entry 3683 (class 2606 OID 25699)
+-- Name: lib_books pk_lib_books; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_books
+    ADD CONSTRAINT pk_lib_books PRIMARY KEY (book_id);
+
+
+--
+-- TOC entry 3705 (class 2606 OID 26044)
+-- Name: lib_user_bookshelf_books pk_lib_bookshelf_books; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_bookshelf_books
+    ADD CONSTRAINT pk_lib_bookshelf_books PRIMARY KEY (bookshelf_book_id);
+
+
+--
+-- TOC entry 3679 (class 2606 OID 25672)
+-- Name: lib_categories pk_lib_categories; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_categories
+    ADD CONSTRAINT pk_lib_categories PRIMARY KEY (category_id);
+
+
+--
+-- TOC entry 3675 (class 2606 OID 25652)
+-- Name: lib_languages pk_lib_languages; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_languages
+    ADD CONSTRAINT pk_lib_languages PRIMARY KEY (language_id);
+
+
+--
+-- TOC entry 3677 (class 2606 OID 25662)
+-- Name: lib_publishing_houses pk_lib_publishing_houses; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_publishing_houses
+    ADD CONSTRAINT pk_lib_publishing_houses PRIMARY KEY (publishing_house_id);
+
+
+--
+-- TOC entry 3691 (class 2606 OID 25813)
+-- Name: lib_user_rating_histories pk_lib_rating_histories; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_rating_histories
+    ADD CONSTRAINT pk_lib_rating_histories PRIMARY KEY (rating_history_id);
+
+
+--
+-- TOC entry 3703 (class 2606 OID 26010)
+-- Name: lib_user_reading_hall_books pk_lib_reading_hall_books; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_reading_hall_books
+    ADD CONSTRAINT pk_lib_reading_hall_books PRIMARY KEY (reading_hall_book);
+
+
+--
+-- TOC entry 3699 (class 2606 OID 25979)
+-- Name: lib_sub_categories pk_lib_sub_categories; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_sub_categories
+    ADD CONSTRAINT pk_lib_sub_categories PRIMARY KEY (sub_category_id);
+
+
+--
+-- TOC entry 3701 (class 2606 OID 25992)
+-- Name: lib_user_expected_books pk_lib_user_expected_books; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_expected_books
+    ADD CONSTRAINT pk_lib_user_expected_books PRIMARY KEY (user_expected_book_id);
+
+
+--
+-- TOC entry 3687 (class 2606 OID 25728)
+-- Name: lib_user_histories pk_lib_user_histories; Type: CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_histories
+    ADD CONSTRAINT pk_lib_user_histories PRIMARY KEY (user_history_id);
+
+
+--
+-- TOC entry 3717 (class 2606 OID 25964)
+-- Name: lib_book_statuses fk_book_statuses_book_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_book_statuses
+    ADD CONSTRAINT fk_book_statuses_book_id FOREIGN KEY (book_id) REFERENCES library.lib_books(book_id);
+
+
+--
+-- TOC entry 3706 (class 2606 OID 25766)
+-- Name: lib_books fk_books_author_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_books
+    ADD CONSTRAINT fk_books_author_id FOREIGN KEY (author_id) REFERENCES library.lib_authors(author_id);
+
+
+--
+-- TOC entry 3707 (class 2606 OID 25756)
+-- Name: lib_books fk_books_category_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_books
+    ADD CONSTRAINT fk_books_category_id FOREIGN KEY (category_id) REFERENCES library.lib_categories(category_id);
+
+
+--
+-- TOC entry 3708 (class 2606 OID 25746)
+-- Name: lib_books fk_books_language_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_books
+    ADD CONSTRAINT fk_books_language_id FOREIGN KEY (language_id) REFERENCES library.lib_languages(language_id);
+
+
+--
+-- TOC entry 3709 (class 2606 OID 25761)
+-- Name: lib_books fk_books_location_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_books
+    ADD CONSTRAINT fk_books_location_id FOREIGN KEY (book_location_id) REFERENCES library.lib_book_locations(book_location_id);
+
+
+--
+-- TOC entry 3710 (class 2606 OID 25751)
+-- Name: lib_books fk_books_publishing_house_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_books
+    ADD CONSTRAINT fk_books_publishing_house_id FOREIGN KEY (publishing_house_id) REFERENCES library.lib_publishing_houses(publishing_house_id);
+
+
+--
+-- TOC entry 3726 (class 2606 OID 26055)
+-- Name: lib_user_bookshelf_books fk_bookshelf_book_book_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_bookshelf_books
+    ADD CONSTRAINT fk_bookshelf_book_book_id FOREIGN KEY (book_id) REFERENCES library.lib_books(book_id);
+
+
+--
+-- TOC entry 3725 (class 2606 OID 26050)
+-- Name: lib_user_bookshelf_books fk_bookshelf_book_operator_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_bookshelf_books
+    ADD CONSTRAINT fk_bookshelf_book_operator_id FOREIGN KEY (operator_id) REFERENCES library.lib_users(user_id);
+
+
+--
+-- TOC entry 3724 (class 2606 OID 26045)
+-- Name: lib_user_bookshelf_books fk_bookshelf_book_user_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_bookshelf_books
+    ADD CONSTRAINT fk_bookshelf_book_user_id FOREIGN KEY (user_id) REFERENCES library.lib_users(user_id);
+
+
+--
+-- TOC entry 3715 (class 2606 OID 25815)
+-- Name: lib_user_rating_histories fk_lib_rating_histories_book_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_rating_histories
+    ADD CONSTRAINT fk_lib_rating_histories_book_id FOREIGN KEY (book_id) REFERENCES library.lib_books(book_id);
+
+
+--
+-- TOC entry 3716 (class 2606 OID 25820)
+-- Name: lib_user_rating_histories fk_lib_rating_histories_user_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_rating_histories
+    ADD CONSTRAINT fk_lib_rating_histories_user_id FOREIGN KEY (user_id) REFERENCES library.lib_users(user_id);
+
+
+--
+-- TOC entry 3714 (class 2606 OID 25801)
+-- Name: lib_user_baskets fk_lib_user_baskets_book_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_baskets
+    ADD CONSTRAINT fk_lib_user_baskets_book_id FOREIGN KEY (book_id) REFERENCES library.lib_books(book_id);
+
+
+--
+-- TOC entry 3713 (class 2606 OID 25796)
+-- Name: lib_user_baskets fk_lib_user_baskets_user_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_baskets
+    ADD CONSTRAINT fk_lib_user_baskets_user_id FOREIGN KEY (user_id) REFERENCES library.lib_users(user_id);
+
+
+--
+-- TOC entry 3711 (class 2606 OID 25771)
+-- Name: lib_user_histories fk_lib_user_histories_book_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_histories
+    ADD CONSTRAINT fk_lib_user_histories_book_id FOREIGN KEY (book_id) REFERENCES library.lib_books(book_id);
+
+
+--
+-- TOC entry 3712 (class 2606 OID 25776)
+-- Name: lib_user_histories fk_lib_user_histories_user_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_histories
+    ADD CONSTRAINT fk_lib_user_histories_user_id FOREIGN KEY (user_id) REFERENCES library.lib_users(user_id);
+
+
+--
+-- TOC entry 3722 (class 2606 OID 26012)
+-- Name: lib_user_reading_hall_books fk_reading_hall_books_book_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_reading_hall_books
+    ADD CONSTRAINT fk_reading_hall_books_book_id FOREIGN KEY (book_id) REFERENCES library.lib_books(book_id);
+
+
+--
+-- TOC entry 3721 (class 2606 OID 26027)
+-- Name: lib_user_reading_hall_books fk_reading_hall_books_operator_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_reading_hall_books
+    ADD CONSTRAINT fk_reading_hall_books_operator_id FOREIGN KEY (operator_id) REFERENCES library.lib_users(user_id);
+
+
+--
+-- TOC entry 3723 (class 2606 OID 26032)
+-- Name: lib_user_reading_hall_books fk_reading_hall_books_user_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_reading_hall_books
+    ADD CONSTRAINT fk_reading_hall_books_user_id FOREIGN KEY (user_id) REFERENCES library.lib_users(user_id);
+
+
+--
+-- TOC entry 3718 (class 2606 OID 25980)
+-- Name: lib_sub_categories fk_sub_categories_category_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_sub_categories
+    ADD CONSTRAINT fk_sub_categories_category_id FOREIGN KEY (category_id) REFERENCES library.lib_categories(category_id);
+
+
+--
+-- TOC entry 3720 (class 2606 OID 25993)
+-- Name: lib_user_expected_books fk_user_expected_books_book_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_expected_books
+    ADD CONSTRAINT fk_user_expected_books_book_id FOREIGN KEY (book_id) REFERENCES library.lib_books(book_id);
+
+
+--
+-- TOC entry 3719 (class 2606 OID 25998)
+-- Name: lib_user_expected_books fk_user_expected_books_user_id; Type: FK CONSTRAINT; Schema: library; Owner: library
+--
+
+ALTER TABLE ONLY library.lib_user_expected_books
+    ADD CONSTRAINT fk_user_expected_books_user_id FOREIGN KEY (user_id) REFERENCES library.lib_users(user_id);
+
+
+-- Completed on 2019-11-18 14:16:25
+
+--
+-- PostgreSQL database dump complete
+--
+

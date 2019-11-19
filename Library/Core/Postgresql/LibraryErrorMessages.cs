@@ -8,18 +8,27 @@ namespace Library.Core.Postgresql
 {
     public static class LibraryErrorMessages
     {
-        public static string lib_0001 = "Book does't exists";
-
+        public static Dictionary<String, String> lib_user_errors = new Dictionary<string, string>()
+        {
+            {"lib_0001", "The book was not found." },
+            {"lib_0002", "The books were not found."},
+            {"lib_sys_0001", "Database is unaccessible." }
+        };
 
         public static string GetErrorMessage(string errorCode)
         {
-            //Get type of MyClass
-            Type myType = Type.GetType("Library.Core.Postgresql.LibraryErrorMessages");
+            string errorMessage = "";
 
-            //Get PropertyInfo for property SomeProperty
-            PropertyInfo pi = myType.GetProperty(errorCode);
-             
-            return (String) pi.GetValue(null, null);
+            if (errorCode.StartsWith("lib"))
+            {
+                errorMessage = lib_user_errors[errorCode];                
+            }
+            else
+            {
+                errorMessage = lib_user_errors["lib_sys_0001"];
+            }
+
+            return errorMessage;            
         }
     }
 }

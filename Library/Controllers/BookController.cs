@@ -166,6 +166,7 @@ namespace Library.Controllers
         /// Updates the book.
         /// </summary>
         /// <remarks>
+        /// 
         /// Sample request:
         ///
         ///     POST /Book

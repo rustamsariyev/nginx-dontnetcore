@@ -12,24 +12,26 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace Library.PostgresRepository
-{ 
+{
     public class PgBook : MainPgRepository, IPgBook
-    {      
+    {
         public PgBook(DbSettings _dbSettings, LibraryFunctions _libraryFunctions/*, LibraryErrorMessages _libraryErrorMessages*/) : base(_dbSettings, _libraryFunctions/*, _libraryErrorMessages*/) { }
 
         public ItemResult Get(int id)
         {
             ItemResult itemResult = new ItemResult();
-            
+
             using (NpgsqlConnection connection = this.CreateConnection())
             {
-                connection.Open();
-                this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_get, connection);                
-                this.Cmd.Parameters.AddWithValue("p_book_id", id);
-                
                 try
                 {
-                    using (var dataReader = this.Cmd.ExecuteReader())
+                    connection.Open();
+                    this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_get, connection);
+                    this.Cmd.Parameters.AddWithValue("p_book_id", id);
+
+                    NpgsqlDataReader dataReader = null;
+                    dataReader = this.Cmd.ExecuteReader();
+                    using (dataReader)
                     {
                         while (dataReader.Read())
                         {
@@ -40,25 +42,33 @@ namespace Library.PostgresRepository
                 }
                 catch (PostgresException e)
                 {
-                    itemResult.Code = LibraryErrorMessages.GetErrorMessage(e.MessageText);
+                    itemResult.Code = e.MessageText;
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
+                }
+                catch (NpgsqlException e)
+                {
+                    itemResult.Code = (e.ErrorCode).ToString();
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
                 }
             }
 
             return itemResult;
         }
-        
+
         public ItemResult GetAll()
         {
             ItemResult itemResult = new ItemResult();
 
             using (NpgsqlConnection connection = this.CreateConnection())
             {
-                connection.Open();
-                this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_get_all, connection);
-
                 try
                 {
-                    using (var dataReader = this.Cmd.ExecuteReader())
+                    connection.Open();
+                    this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_get_all, connection);
+
+                    NpgsqlDataReader dataReader = null;
+                    dataReader = this.Cmd.ExecuteReader();
+                    using (dataReader)
                     {
                         while (dataReader.Read())
                         {
@@ -69,32 +79,40 @@ namespace Library.PostgresRepository
                 }
                 catch (PostgresException e)
                 {
-                    itemResult.Code = e.ToString();
+                    itemResult.Code = e.MessageText;
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
+                }
+                catch (NpgsqlException e)
+                {
+                    itemResult.Code = (e.ErrorCode).ToString();
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
                 }
             }
 
             return itemResult;
         }
-        
+
         public ItemResult Add(IBook newBook)
         {
             ItemResult itemResult = new ItemResult();
 
             using (NpgsqlConnection connection = this.CreateConnection())
             {
-                connection.Open();
-                this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_add, connection);
-                this.Cmd.Parameters.AddWithValue("p_book_name", newBook.Name);
-                this.Cmd.Parameters.AddWithValue("p_author_id", newBook.AuhorId);
-                this.Cmd.Parameters.AddWithValue("p_language_id", newBook.LanguageId);
-                this.Cmd.Parameters.AddWithValue("p_publishing_house_id", newBook.PublishingHouseId);
-                this.Cmd.Parameters.AddWithValue("p_category_id", newBook.CategoryId);
-                this.Cmd.Parameters.AddWithValue("p_book_location_id", newBook.LocationId);
-                this.Cmd.Parameters.AddWithValue("p_rating", newBook.Rating);
-
                 try
                 {
-                    using (var dataReader = this.Cmd.ExecuteReader())
+                    connection.Open();
+                    this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_add, connection);
+                    this.Cmd.Parameters.AddWithValue("p_book_name", newBook.Name);
+                    this.Cmd.Parameters.AddWithValue("p_author_id", newBook.AuhorId);
+                    this.Cmd.Parameters.AddWithValue("p_language_id", newBook.LanguageId);
+                    this.Cmd.Parameters.AddWithValue("p_publishing_house_id", newBook.PublishingHouseId);
+                    this.Cmd.Parameters.AddWithValue("p_category_id", newBook.CategoryId);
+                    this.Cmd.Parameters.AddWithValue("p_book_location_id", newBook.LocationId);
+                    this.Cmd.Parameters.AddWithValue("p_rating", newBook.Rating);
+
+                    NpgsqlDataReader dataReader = null;
+                    dataReader = this.Cmd.ExecuteReader();
+                    using (dataReader)
                     {
                         while (dataReader.Read())
                         {
@@ -105,9 +123,14 @@ namespace Library.PostgresRepository
                 }
                 catch (PostgresException e)
                 {
-                    itemResult.Code = e.ToString();
+                    itemResult.Code = e.MessageText;
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
                 }
-
+                catch (NpgsqlException e)
+                {
+                    itemResult.Code = (e.ErrorCode).ToString();
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
+                }
             }
 
             return itemResult;
@@ -119,20 +142,22 @@ namespace Library.PostgresRepository
 
             using (NpgsqlConnection connection = this.CreateConnection())
             {
-                connection.Open();
-                this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_edit, connection);
-                this.Cmd.Parameters.AddWithValue("p_book_id", editedBook.Id);
-                this.Cmd.Parameters.AddWithValue("p_book_name", editedBook.Name);
-                this.Cmd.Parameters.AddWithValue("p_author_id", editedBook.AuhorId);
-                this.Cmd.Parameters.AddWithValue("p_language_id", editedBook.LanguageId);
-                this.Cmd.Parameters.AddWithValue("p_publishing_house_id", editedBook.PublishingHouseId);
-                this.Cmd.Parameters.AddWithValue("p_category_id", editedBook.CategoryId);
-                this.Cmd.Parameters.AddWithValue("p_book_location_id", editedBook.LocationId);
-                this.Cmd.Parameters.AddWithValue("p_rating", editedBook.Rating);
-
                 try
                 {
-                    using (var dataReader = this.Cmd.ExecuteReader())
+                    connection.Open();
+                    this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_edit, connection);
+                    this.Cmd.Parameters.AddWithValue("p_book_id", editedBook.Id);
+                    this.Cmd.Parameters.AddWithValue("p_book_name", editedBook.Name);
+                    this.Cmd.Parameters.AddWithValue("p_author_id", editedBook.AuhorId);
+                    this.Cmd.Parameters.AddWithValue("p_language_id", editedBook.LanguageId);
+                    this.Cmd.Parameters.AddWithValue("p_publishing_house_id", editedBook.PublishingHouseId);
+                    this.Cmd.Parameters.AddWithValue("p_category_id", editedBook.CategoryId);
+                    this.Cmd.Parameters.AddWithValue("p_book_location_id", editedBook.LocationId);
+                    this.Cmd.Parameters.AddWithValue("p_rating", editedBook.Rating);
+
+                    NpgsqlDataReader dataReader = null;
+                    dataReader = this.Cmd.ExecuteReader();
+                    using (dataReader)
                     {
                         while (dataReader.Read())
                         {
@@ -143,9 +168,14 @@ namespace Library.PostgresRepository
                 }
                 catch (PostgresException e)
                 {
-                    itemResult.Item = e.ToString();
+                    itemResult.Code = e.MessageText;
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
                 }
-
+                catch (NpgsqlException e)
+                {
+                    itemResult.Code = (e.ErrorCode).ToString();
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
+                }
             }
 
             return itemResult;
@@ -157,29 +187,36 @@ namespace Library.PostgresRepository
 
             using (NpgsqlConnection connection = this.CreateConnection())
             {
-                connection.Open();
-                this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_delete, connection);
-                this.Cmd.Parameters.AddWithValue("p_book_id", id);
-
                 try
                 {
-                    using (var dataReader = this.Cmd.ExecuteReader())
+                    connection.Open();
+                    this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_delete, connection);
+                    this.Cmd.Parameters.AddWithValue("p_book_id", id);
+
+                    NpgsqlDataReader dataReader = null;
+                    dataReader = this.Cmd.ExecuteReader();
+                    using (dataReader)
                     {
                         while (dataReader.Read())
                         {
-                            itemResult.Item = (int) dataReader[0];
+                            itemResult.Item = (int)dataReader[0];
                         }
                     }
                     connection.Close();
                 }
                 catch (PostgresException e)
                 {
-                    itemResult.Code = e.ToString();
+                    itemResult.Code = e.MessageText;
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
                 }
-
+                catch (NpgsqlException e)
+                {
+                    itemResult.Code = (e.ErrorCode).ToString();
+                    itemResult.Message = LibraryErrorMessages.GetErrorMessage(itemResult.Code);
+                }
             }
 
             return itemResult;
-        }       
+        }
     }
 }
