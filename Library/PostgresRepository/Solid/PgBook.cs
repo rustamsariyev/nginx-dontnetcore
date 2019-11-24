@@ -107,8 +107,11 @@ namespace Library.PostgresRepository
                     this.Cmd.Parameters.AddWithValue("p_language_id", newBook.LanguageId);
                     this.Cmd.Parameters.AddWithValue("p_publishing_house_id", newBook.PublishingHouseId);
                     this.Cmd.Parameters.AddWithValue("p_category_id", newBook.CategoryId);
-                    this.Cmd.Parameters.AddWithValue("p_book_location_id", newBook.LocationId);
+                    this.Cmd.Parameters.AddWithValue("p_book_location_id", newBook.LocationId);                    
                     this.Cmd.Parameters.AddWithValue("p_rating", newBook.Rating);
+                    //this.Cmd.Parameters.AddWithValue("p_publish_date", newBook.PublishDate);
+                    this.Cmd.Parameters.AddWithValue("p_access_type", newBook.AccessType);
+                    this.Cmd.Parameters.AddWithValue("p_book_format", newBook.BookFormat);
 
                     NpgsqlDataReader dataReader = null;
                     dataReader = this.Cmd.ExecuteReader();
