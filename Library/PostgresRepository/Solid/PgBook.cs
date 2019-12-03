@@ -26,8 +26,8 @@ namespace Library.PostgresRepository
                 try
                 {
                     connection.Open();
-                    this.CreateFunctionCallQuery(this.LibraryFunctions.fn_book_get, connection);
-                    this.Cmd.Parameters.AddWithValue("p_book_id", id);
+                    this.CreateFunctionCallQuery(this.LibraryFunctions.fn_resource_get, connection);
+                    this.Cmd.Parameters.AddWithValue("p_resource_id", id);
 
                     NpgsqlDataReader dataReader = null;
                     dataReader = this.Cmd.ExecuteReader();

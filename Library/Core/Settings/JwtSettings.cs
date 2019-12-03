@@ -7,5 +7,6 @@ namespace Library.Core
 {
     public class JwtSettings
     {
+        public string SecretKey { get; set; }
     }
 }

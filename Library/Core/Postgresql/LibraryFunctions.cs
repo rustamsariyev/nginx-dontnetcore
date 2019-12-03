@@ -12,5 +12,7 @@ namespace Library.Core.Postgresql
         public string fn_book_add = "fn_book_add";
         public string fn_book_edit = "fn_book_edit";
         public string fn_book_delete = "fn_book_delete";
+
+        public string fn_resource_get = "fn_resource_get";
     }
 }

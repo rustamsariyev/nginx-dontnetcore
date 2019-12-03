@@ -13,7 +13,7 @@ namespace Library.Models.Inputs
         [JsonProperty(PropertyName = "book_id")]
         public int? Id { get; set; }
         [JsonProperty(PropertyName = "book_name")]        
-        public string? Name { get; set; }
+        public string Name { get; set; }
         [JsonProperty(PropertyName = "author_id")]
         public int? AuhorId { get; set; }
         [JsonProperty(PropertyName = "language_id")]
@@ -39,8 +39,8 @@ namespace Library.Models.Inputs
         [JsonProperty(PropertyName = "publish_date")]
         public DateTime? PublishDate { get; set; }
         [JsonProperty(PropertyName = "access_type")]
-        public String? AccessType { get; set; }
+        public String AccessType { get; set; }
         [JsonProperty(PropertyName = "book_format")]
-        public String? BookFormat { get; set; }
+        public String BookFormat { get; set; }
     }
 }

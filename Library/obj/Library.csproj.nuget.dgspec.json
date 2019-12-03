@@ -45,6 +45,10 @@
               "target": "Package",
               "version": "[3.0.0.414, )"
             },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[3.0.0, )"
+            },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
               "version": "[3.0.0, )"
@@ -63,9 +67,17 @@
               "target": "Package",
               "version": "[3.0.0, )"
             },
+            "Microsoft.Windows.Compatibility": {
+              "target": "Package",
+              "version": "[3.0.1, )"
+            },
             "NLog.Web.AspNetCore": {
               "target": "Package",
               "version": "[4.9.0, )"
+            },
+            "Novell.Directory.Ldap.NETStandard": {
+              "target": "Package",
+              "version": "[2.3.8, )"
             },
             "Npgsql": {
               "target": "Package",
@@ -78,6 +90,10 @@
             "Syncfusion.Pdf.Net.Core": {
               "target": "Package",
               "version": "[17.3.0.26, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[5.5.0, )"
             }
           },
           "imports": [
