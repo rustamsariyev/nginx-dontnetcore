@@ -1,0 +1,22 @@
+version: "3.3"
+
+services:
+
+  reverseproxy:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+
+  backend:
+    depends_on:
+      - reverseproxy
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - "80"
+    restart: always
